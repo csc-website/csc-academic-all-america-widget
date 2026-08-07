@@ -1,1 +1,62 @@
-*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#222;font-family:Arial,Helvetica,sans-serif}.widget{width:100%;max-width:1000px;margin:0 auto;padding:14px 18px 18px}.story{padding:0 0 13px;margin:0 0 13px;border-bottom:1px solid #ddd}.story:last-child{margin-bottom:0;border-bottom:0}.story-title{display:block;margin:0;font-size:16px;line-height:1.3;font-weight:700;color:#174a7e;text-decoration:none}.story-title:hover,.story-title:focus{text-decoration:underline}.story-date{margin-top:2px;font-size:14px;line-height:1.3;color:#555}.status,.error{margin:0;font-size:14px;color:#666}@media(max-width:480px){.widget{padding:12px 14px 16px}.story-title{font-size:15px}.story-date{font-size:13px}}
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #ffffff;
+}
+
+body {
+    padding: 0;
+}
+
+.widget {
+    width: 100%;
+}
+
+#stories {
+    width: 100%;
+}
+
+.story {
+    margin: 0 0 14px 0;
+}
+
+.story:last-child {
+    margin-bottom: 0;
+}
+
+.story-title {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1.25;
+    font-weight: 700;
+}
+
+.story-title a {
+    color: #005cb9;
+    text-decoration: none;
+}
+
+.story-title a:hover {
+    text-decoration: underline;
+}
+
+.story-date {
+    margin: 3px 0 0 0;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1.25;
+    color: #666666;
+}
+
+.status {
+    margin: 0;
+    font-size: 14px;
+    color: #666666;
+}
