@@ -1,4 +1,3 @@
-```python
 import json
 import urllib.parse
 import urllib.request
@@ -88,4 +87,3 @@ with open("stories.json", "w", encoding="utf-8") as file:
     file.write("\n")
 
 print(f"Updated {len(stories)} stories.")
-```
