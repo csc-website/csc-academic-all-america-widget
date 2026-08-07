@@ -1,28 +1,15 @@
-import urllib.parse
 import urllib.request
 
-SERVICE_URL = "https://academicallamerica.com/services/archives.ashx/stories"
-
-params = {
-    "index": 1,
-    "page_size": 30,
-    "sport": "",
-    "season": "",
-    "school": "",
-    "search": ""
-}
-
-url = SERVICE_URL + "?" + urllib.parse.urlencode(params)
-
-print("REQUEST URL:")
-print(url)
-print()
+URL = (
+    "https://academicallamerica.com/services/archives.ashx/stories"
+    "?index=1&page_size=30"
+)
 
 request = urllib.request.Request(
-    url,
+    URL,
     headers={
         "User-Agent": "Mozilla/5.0",
-        "Accept": "*/*",
+        "Accept": "application/json",
         "Referer": "https://academicallamerica.com/archives.aspx"
     }
 )
@@ -30,20 +17,9 @@ request = urllib.request.Request(
 with urllib.request.urlopen(request, timeout=30) as response:
     raw = response.read().decode("utf-8", errors="replace")
 
-    print("HTTP STATUS:")
-    print(response.status)
-    print()
-
-    print("CONTENT TYPE:")
-    print(response.headers.get("Content-Type"))
-    print()
-
-    print("RESPONSE LENGTH:")
-    print(len(raw))
-    print()
-
-    print("FIRST 5000 CHARACTERS OF RESPONSE:")
-    print(raw[:5000])
-
+print("HTTP STATUS:")
+print(response.status)
 print()
-print("DIAGNOSTIC COMPLETE")
+
+print("RESPONSE:")
+print(raw[:10000])
