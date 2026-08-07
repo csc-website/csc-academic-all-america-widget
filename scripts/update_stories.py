@@ -1,12 +1,23 @@
+import json
+import urllib.parse
 import urllib.request
 
-URL = (
-    "https://academicallamerica.com/services/archives.ashx/stories"
-    "?index=1&page_size=30"
-)
+SERVICE_URL = "https://academicallamerica.com/services/archives.ashx/stories"
+LIMIT = 10
+
+params = {
+    "index": 1,
+    "page_size": 30,
+    "sport": 0,
+    "season": 0,
+    "school": 0,
+    "search": ""
+}
+
+url = SERVICE_URL + "?" + urllib.parse.urlencode(params)
 
 request = urllib.request.Request(
-    URL,
+    url,
     headers={
         "User-Agent": "Mozilla/5.0",
         "Accept": "application/json",
@@ -19,7 +30,6 @@ with urllib.request.urlopen(request, timeout=30) as response:
 
 print("HTTP STATUS:")
 print(response.status)
-print()
 
 print("RESPONSE:")
 print(raw[:10000])
