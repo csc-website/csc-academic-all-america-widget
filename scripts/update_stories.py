@@ -1,39 +1,70 @@
 import json
+import urllib.parse
 import urllib.request
 
-SERVICE_URL = "https://academicallamerica.com/services/archives.ashx/stories"
+BASE_URL = "https://academicallamerica.com/services/archives.ashx/stories"
+
 LIMIT = 10
 
+params = {
+    "index": 1,
+    "page_size": 30,
+    "sport": "",
+    "season": "",
+    "school": "",
+    "search": ""
+}
+
+url = BASE_URL + "?" + urllib.parse.urlencode(params)
+
 request = urllib.request.Request(
-    SERVICE_URL,
+    url,
     headers={
         "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json"
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://academicallamerica.com/archives.aspx"
     }
 )
 
 with urllib.request.urlopen(request, timeout=30) as response:
-    data = json.loads(response.read().decode("utf-8"))
+    raw = response.read().decode("utf-8", errors="replace")
 
-# The Academic All-America service returns the stories inside
-# a top-level object rather than as the top-level JSON value.
+data = json.loads(raw)
+
+# The service may return:
+# 1. a normal list of story dictionaries
+# 2. a list containing JSON strings
+# 3. an object containing the list
 if isinstance(data, dict):
-    for key in ("stories", "data", "items", "results"):
-        if isinstance(data.get(key), list):
+    for key in ("data", "stories", "items", "results"):
+        if key in data:
             data = data[key]
             break
 
+# If individual entries are JSON strings, decode them.
+if isinstance(data, list):
+    decoded = []
+
+    for item in data:
+        if isinstance(item, str):
+            try:
+                item = json.loads(item)
+            except json.JSONDecodeError:
+                continue
+
+        if isinstance(item, dict):
+            decoded.append(item)
+
+    data = decoded
+
 if not isinstance(data, list):
     raise RuntimeError(
-        "Academic All-America returned an unexpected data format."
+        "Academic All-America returned an unexpected response."
     )
 
 stories = []
 
 for item in data:
-    if not isinstance(item, dict):
-        continue
-
     title = str(item.get("story_headline", "")).strip()
     date = str(item.get("story_postdate", "")).strip()
     path = str(item.get("story_path", "")).strip()
@@ -44,7 +75,10 @@ for item in data:
     if path.startswith("http"):
         link = path
     else:
-        link = "https://academicallamerica.com" + path
+        link = urllib.parse.urljoin(
+            "https://academicallamerica.com/",
+            path
+        )
 
     stories.append({
         "title": title,
@@ -57,11 +91,16 @@ for item in data:
 
 if len(stories) < LIMIT:
     raise RuntimeError(
-        f"Found only {len(stories)} stories. Expected at least {LIMIT}."
+        f"Found only {len(stories)} usable stories. Expected at least {LIMIT}."
     )
 
 with open("stories.json", "w", encoding="utf-8") as file:
-    json.dump(stories, file, indent=2, ensure_ascii=False)
+    json.dump(
+        stories,
+        file,
+        indent=2,
+        ensure_ascii=False
+    )
     file.write("\n")
 
 print(f"Updated {len(stories)} stories.")
