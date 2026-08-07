@@ -1,6 +1,7 @@
 import json
 import urllib.parse
 import urllib.request
+from datetime import datetime
 
 SERVICE_URL = "https://academicallamerica.com/services/archives.ashx/stories"
 LIMIT = 10
@@ -45,11 +46,19 @@ stories = []
 
 for item in records[:LIMIT]:
     title = str(item.get("story_headline", "")).strip()
-    date = str(item.get("story_postdate", "")).strip()
+    raw_date = str(item.get("story_postdate", "")).strip()
     path = str(item.get("story_path", "")).strip()
 
     if not title or not path:
         continue
+
+    # Format date as "August 7, 2026"
+    try:
+        date = datetime.fromisoformat(
+            raw_date.replace("Z", "+00:00")
+        ).strftime("%B %-d, %Y")
+    except ValueError:
+        date = raw_date
 
     link = urllib.parse.urljoin(
         "https://academicallamerica.com/",
