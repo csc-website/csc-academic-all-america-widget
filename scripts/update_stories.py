@@ -1,3 +1,4 @@
+```python
 import json
 import urllib.parse
 import urllib.request
@@ -54,8 +55,9 @@ for item in records[:LIMIT]:
 
     # Format date as "August 7, 2026"
     try:
-        date = datetime.fromisoformat(
-            raw_date.replace("Z", "+00:00")
+        date = datetime.strptime(
+            raw_date,
+            "%m/%d/%Y"
         ).strftime("%B %-d, %Y")
     except ValueError:
         date = raw_date
@@ -86,3 +88,4 @@ with open("stories.json", "w", encoding="utf-8") as file:
     file.write("\n")
 
 print(f"Updated {len(stories)} stories.")
+```
