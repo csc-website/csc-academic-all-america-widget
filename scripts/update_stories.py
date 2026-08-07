@@ -2,8 +2,7 @@ import json
 import urllib.parse
 import urllib.request
 
-BASE_URL = "https://academicallamerica.com/services/archives.ashx/stories"
-
+SERVICE_URL = "https://academicallamerica.com/services/archives.ashx/stories"
 LIMIT = 10
 
 params = {
@@ -15,7 +14,7 @@ params = {
     "search": ""
 }
 
-url = BASE_URL + "?" + urllib.parse.urlencode(params)
+url = SERVICE_URL + "?" + urllib.parse.urlencode(params)
 
 request = urllib.request.Request(
     url,
@@ -31,40 +30,53 @@ with urllib.request.urlopen(request, timeout=30) as response:
 
 data = json.loads(raw)
 
-# The service may return:
-# 1. a normal list of story dictionaries
-# 2. a list containing JSON strings
-# 3. an object containing the list
-if isinstance(data, dict):
-    for key in ("data", "stories", "items", "results"):
-        if key in data:
-            data = data[key]
-            break
 
-# If individual entries are JSON strings, decode them.
-if isinstance(data, list):
-    decoded = []
+def find_stories(value):
+    """
+    Search the returned JSON recursively for dictionaries
+    containing the Academic All-America story fields.
+    """
 
-    for item in data:
-        if isinstance(item, str):
-            try:
-                item = json.loads(item)
-            except json.JSONDecodeError:
-                continue
+    found = []
 
-        if isinstance(item, dict):
-            decoded.append(item)
+    if isinstance(value, dict):
 
-    data = decoded
+        # This is a story record.
+        if (
+            "story_headline" in value
+            and "story_path" in value
+        ):
+            found.append(value)
+            return found
 
-if not isinstance(data, list):
-    raise RuntimeError(
-        "Academic All-America returned an unexpected response."
-    )
+        # Otherwise search all values.
+        for child in value.values():
+            found.extend(find_stories(child))
+
+    elif isinstance(value, list):
+
+        for child in value:
+            found.extend(find_stories(child))
+
+    elif isinstance(value, str):
+
+        # Sometimes a service returns JSON encoded as a string.
+        try:
+            decoded = json.loads(value)
+            found.extend(find_stories(decoded))
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    return found
+
+
+records = find_stories(data)
 
 stories = []
+seen_links = set()
 
-for item in data:
+for item in records:
+
     title = str(item.get("story_headline", "")).strip()
     date = str(item.get("story_postdate", "")).strip()
     path = str(item.get("story_path", "")).strip()
@@ -80,6 +92,11 @@ for item in data:
             path
         )
 
+    if link in seen_links:
+        continue
+
+    seen_links.add(link)
+
     stories.append({
         "title": title,
         "date": date,
@@ -89,10 +106,13 @@ for item in data:
     if len(stories) >= LIMIT:
         break
 
+
 if len(stories) < LIMIT:
     raise RuntimeError(
-        f"Found only {len(stories)} usable stories. Expected at least {LIMIT}."
+        f"Found only {len(stories)} usable stories. "
+        f"Expected at least {LIMIT}."
     )
+
 
 with open("stories.json", "w", encoding="utf-8") as file:
     json.dump(
@@ -103,4 +123,8 @@ with open("stories.json", "w", encoding="utf-8") as file:
     )
     file.write("\n")
 
+
 print(f"Updated {len(stories)} stories.")
+
+for story in stories:
+    print(f"{story['date']} - {story['title']}")
