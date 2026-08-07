@@ -7,19 +7,36 @@ LIMIT = 10
 request = urllib.request.Request(
     SERVICE_URL,
     headers={
-        "User-Agent": "Mozilla/5.0"
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json"
     }
 )
 
 with urllib.request.urlopen(request, timeout=30) as response:
     data = json.loads(response.read().decode("utf-8"))
 
+# The Academic All-America service returns the stories inside
+# a top-level object rather than as the top-level JSON value.
+if isinstance(data, dict):
+    for key in ("stories", "data", "items", "results"):
+        if isinstance(data.get(key), list):
+            data = data[key]
+            break
+
+if not isinstance(data, list):
+    raise RuntimeError(
+        "Academic All-America returned an unexpected data format."
+    )
+
 stories = []
 
 for item in data:
-    title = item.get("story_headline", "").strip()
-    date = item.get("story_postdate", "").strip()
-    path = item.get("story_path", "").strip()
+    if not isinstance(item, dict):
+        continue
+
+    title = str(item.get("story_headline", "")).strip()
+    date = str(item.get("story_postdate", "")).strip()
+    path = str(item.get("story_path", "")).strip()
 
     if not title or not path:
         continue
